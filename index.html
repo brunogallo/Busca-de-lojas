@@ -1,0 +1,121 @@
+<!doctype html>
+<html prefix="og: http://ogp.me/ns#" itemscope itemtype="http://schema.org/Article">
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9"><![endif]-->
+<!--[if IE 9]><html class="no-js ie9"><![endif]-->
+<!--[if gt IE 8]><!--><html class="no-js" lang="" prefix="og: http://ogp.me/ns#" itemscope itemtype="http://schema.org/Article"><!--<![endif]-->
+<style>
+	#map-canvas,
+	#panel{
+		float: left;
+		width: 500px;
+		height: 500px;
+		margin-left: 10px;
+	}
+</style>
+<body>	
+	
+<div>
+	<input id="search_address" class="storesearch-input" placeholder="Encontre aqui o restaurante desejado" type="text" autocomplete="off">
+	<button id="bh-sl-submit" onclick="search();">buscar</button>
+</div>
+		
+<div id="map-canvas"></div>
+<div id="panel">
+	<div class="encontre">
+		<select id="estado">
+			<option value="" selected="selected">Selecione um Estado</option>
+		</select>
+	<div class="hr"></div>
+		<select id="cidade" disabled="">
+			<option value="" selected="selected">Selecione uma Cidade</option>
+		</select>
+	</div>
+</div>
+
+
+<!-- JQuery -->
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+<! JQuery UI -->
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+<!-- Google maps api -->
+<script src="https://maps.googleapis.com/maps/api/js?libraries=places&language=br"></script>
+
+<script src="lojas.js"></script>
+
+<script>
+	var franquiaEstado = function(valor){
+		valorFranquia = valor;
+		
+		if(valorFranquia){
+			$("#estado").find('option:contains("'+valorFranquia+'")').prop("selected", true).change();
+			$("#estado, .encontre .hr").hide();
+		}
+	}
+
+	$('#estado').change(function() {
+		$('#cidade option').not(":first").remove();
+		
+		valor = $('#estado option:selected').val();
+		var previousOption;
+		
+		if(valor){ // Checa se o valor não está vazio
+			trocaLocal(valor);
+			var valorCidade = new Array();
+	
+			estadoSelect = {estado: valor, cidade: [valor]};
+		
+			var recuperarValor = function (varNome, valorNome) {
+			    return varNome[valorNome];
+			};
+		
+			listaEstados = recuperarValor(estadoSelect,"cidade");
+	
+			$.ajax({
+			   type: 'GET',
+			   url: 'lojas.csv',
+			   data: null,
+			   success: function(text) {
+			       var fields = text.split(/\n/);
+			       
+			       fields.pop(fields.length-1);
+			                  
+			       var data = fields.slice(1, fields.length);
+			       
+			       for(var i = 0; i < data.length; i++) {
+			          var dataFields = data[i].split(',');
+			          
+			          if(dataFields[7].replace(/"/g,'') == valor){			          
+			          	
+			          	valorCidade[i] = dataFields[6].replace(/"/g,'');
+						$('<option value="'+valorCidade[i]+'">'+valorCidade[i]+'</option>').appendTo('#cidade');
+						
+						filtroSelect();
+	
+					  }
+			       }
+			  }
+			});
+			
+			$('#cidade').prop('disabled', false);
+		} else {
+			$('#cidade').prop('disabled', true);
+		} // Final checa se o valor não está vazio			
+	});
+	
+	$('#cidade').change(function() {
+		valor = $('#cidade option:selected').val();
+		
+		if(valor){ // Checa se o valor não está vazio
+			trocaLocal(valor);
+		}
+	});
+	
+	franquiaEstado(/*'Nome do estado ou cidade para iniciar o mapa.'*/);
+	
+	</script>
+</body>
+</html>
